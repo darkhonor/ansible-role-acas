@@ -1,30 +1,19 @@
 # CHANGELOG
 
-## .Next
+## 1.0.0
 
-> Release Date: Unreleased
+> Release Date: 12 Aug 2023
 
 :boom: **Enhancement**:
 
-- TBD
-
-:warning: **Breaking Change**:
-
-- TBD
+- Initial release
+- Configured for acas_configure-23.03-2.noarch.rpm
 
 :bug: **Bugfix**:
 
 - None
 
-:sweat_drops: **Chore**:
-
-- TBD
-
 :page_facing_up: **Documenation**:
 
 - Added CHANGELOG, LICENSE
 - Updated README
-
-:wrench: **Refactor**:
-
-- TBD

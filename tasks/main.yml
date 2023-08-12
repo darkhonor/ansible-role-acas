@@ -75,6 +75,24 @@
     mode: '0644'
   notify:
     - do_reboot
+# Enable FIPS Mode
+- name: Enable FIPS mode
+  command: /usr/bin/fips-mode-setup --enable
+- name: Enable Dracut FIPS Module
+  lineinfile:
+    path: /etc/dracut.conf.d/40-fips.conf
+    line: add_dracutmodules+=" fips "
+- name: Enable FIPS Mode
+  lineinfile:
+    path: /etc/crypto-policies/config
+    regexp: ^(?!#)(\S+)$
+    line: '{{ var_system_crypto_policy }}'
+    create: true
+- name: 'Configure GnuTLS library to use DoD-approved TLS Encryption: set_fact'
+  set_fact:
+    path: /etc/crypto-policies/back-ends/gnutls.config
+    correct_value: +VERS-ALL:-VERS-DTLS0.9:-VERS-SSL3.0:-VERS-TLS1.0:-VERS-TLS1.1:-VERS-DTLS1.0
+    lineinfile_reg: \+VERS-ALL:-VERS-DTLS0\.9:-VERS-SSL3\.0:-VERS-TLS1\.0:-VERS-TLS1\.1:-VERS-DTLS1\.0
 # 3.3.6. Configure RHEL 8 system per Site Responsibility STIGs’
 - name: Enable fapolicyd Service
   ansible.builtin.service:

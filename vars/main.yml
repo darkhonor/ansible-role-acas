@@ -1,2 +1,3 @@
 ---
 # vars file for ansible-role-acas
+var_system_crypto_policy: FIPS
