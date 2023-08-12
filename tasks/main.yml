@@ -1,0 +1,17 @@
+---
+# tasks file for ansible-role-acas
+- name: Install pre-requisite software
+  ansible.builtin.dnf:
+    name:
+      - dialog
+    state: present
+- name: Install acas-configure package
+  ansible.builtin.dnf:
+    name: '{{ acas_configure_url }}'
+    disable_gpg_check: true
+    sslverify: '{{ verify_repository_ssl }}'
+    state: present
+- name: Install Tenable RPM Key
+  ansible.builtin.rpm_key:
+    key: /opt/acas/var/RPM-GPG-KEY-Tenable
+    state: present

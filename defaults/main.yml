@@ -1,0 +1,5 @@
+---
+# defaults file for ansible-role-acas
+# URL needs to be updated for local hosting; link below is not directly accessible
+acas_configure_url: https://patches.csd.disa.mil/SecureDownload.aspx?sfs=asset&fGuid=254412S
+verify_repository_ssl: false
