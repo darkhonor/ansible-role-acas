@@ -1,7 +1,7 @@
 # Ansible Role: ACAS Server
 
 This [Ansible Role](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html) will
-configure a RHEL 7 or 8 system as an [Assured Compliance Assessment System (ACAS)](https://intelshare.intelink.gov/sites/DISA-ID/ACAS) server.  This role does
+configure a RHEL 8 system as an [Assured Compliance Assessment System (ACAS)](https://intelshare.intelink.gov/sites/DISA-ID/ACAS) server.  This role does
 not install the Tenable software that is included.  Instead, it configures the basic system in accordance
 with the current DISA guidelines published to the [ACAS Program Site](https://intelshare.intelink.gov/sites/DISA-ID/ACAS).
 This role will also ensure the system is running in FIPS mode, which may cause a reboot of the system.

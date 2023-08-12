@@ -3,7 +3,7 @@ galaxy_info:
   description: Ansible Role to Install DISA ACAS Server (sans Tenable products)
   role_name: acas
 
-  # issue_tracker_url: http://example.com/issue/tracker
+  issue_tracker_url: https://github.com/darkhonor/ansible-role-acas/issues
 
   license: MIT
 
@@ -12,7 +12,7 @@ galaxy_info:
   platforms:
     - name: EL
       versions:
-        - all
+        - '8'
 
   galaxy_tags: 
     - disa
