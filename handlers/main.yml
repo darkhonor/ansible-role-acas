@@ -1,2 +1,13 @@
 ---
 # handlers file for ansible-role-acas
+- name: RestartUSBGuard
+  ansible.builtin.service:
+    name: usbguard.service
+    state: restarted
+- name: Restartfapolicyd
+  ansible.builtin.service:
+    name: fapolicyd.service
+    state: restarted
+- name: do_reboot
+  ansible.builtin.reboot:
+    pre_reboot_delay: 60

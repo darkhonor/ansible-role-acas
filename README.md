@@ -1,38 +1,64 @@
-Role Name
-=========
+# Ansible Role: ACAS Server
 
-A brief description of the role goes here.
+This [Ansible Role](https://docs.ansible.com/ansible/latest/playbook_guide/playbooks_reuse_roles.html) will
+configure a RHEL 7 or 8 system as an [Assured Compliance Assessment System (ACAS)](https://intelshare.intelink.gov/sites/DISA-ID/ACAS) server.  This role does
+not install the Tenable software that is included.  Instead, it configures the basic system in accordance
+with the current DISA guidelines published to the [ACAS Program Site](https://intelshare.intelink.gov/sites/DISA-ID/ACAS).
+This role will also ensure the system is running in FIPS mode, which may cause a reboot of the system.
 
-Requirements
-------------
+Of note, DISA has not digitally signed the acas_configure RPM.  There is no GPG verification available.  However,
+DISA has provided a SHA256 hash signature for the RPM file which is included in `default/main.yml`.  
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+## Requirements
 
-Role Variables
---------------
+* Server must have partitions defined IAW [ACAS EL8 User Guide]()
+* The acas_configure package must be hosted on an accessible web server--dnf / yum repositories are not supported
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+## Role Variables
 
-Dependencies
-------------
+### Sensitive Variables
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+The following variables are defined and need to have values provided by the calline site.  STRONGLY recommend
+using [Ansible Vault](https://docs.ansible.com/ansible/latest/vault_guide/vault.html) or some other secret-sharing method to 
+ensure these values are not stored in plaintext within your playbooks.
 
-Example Playbook
-----------------
+* grub2_password: Password used to modify boot settings or access single-user mode
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+### Non-Sensitive Variables
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+The following values can be provided directly in your playbooks without any security concerns.  They are for
+site customization.
 
-License
--------
+* acas_configure_url: URL for the acas_configure package
+* acas_configure_shasum: SHA256 Hash for the acas_configure RPM; this will be provided at the DISA download site
+* verify_repository_ssl: Whether or not to verify the SSL certificate for your local site repository web server
 
-BSD
+## Dependencies
 
-Author Information
-------------------
+None
 
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+## Example Playbook
+
+This is a sample playbook for this role:
+
+```yaml
+---
+- name: Deploy ACAS Server
+  become: true
+  become_method: sudo
+  gather_facts: true
+  hosts: acas
+  roles:
+    - role: acas
+      acas_configure_url: https://repo.lab.test/repo/acas/acas_configure-23.03-2.noarch.rpm
+      verify_repository_ssl: false
+      grub2_password: '{{ vault_grub_password }}'
+```
+
+## License
+
+MIT
+
+## Author Information
+
+Alex Ackerman, X @darkhonor

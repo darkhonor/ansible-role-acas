@@ -1,10 +1,100 @@
 ---
 # tasks file for ansible-role-acas
+- name: Validate no web servers are installed
+  ansible.builtin.dnf: 
+    name:
+      - httpd
+      - nginx
+    state: absent
+    autoremove: true
+# Set Timezone to UTC
+# Install pre-requisite software
 - name: Install pre-requisite software
   ansible.builtin.dnf:
     name:
+      - zip
+      - unzip
+      - expat
+      - sed
+      - rsync
+      - libxslt
+      - libxml2
       - dialog
+      - opensc
+      - bc
+      - aide
+      - logwatch
+      - chrony
+      - postfix
+      - python2
+      - nss-tools
+      - pcsc-lite
+      - fapolicyd
+      - tmux
+      - esc 
+      - openssl-pkcs11
+      - usbguard
+      - rng-tools
     state: present
+# 3.3.1. Reconfigure Mount Points to use STIG Required Mount Options
+- name: /boot mount options
+  ansible.builtin.shell: sed -r -i 's|(/boot\s.*defaults)\s|\1,nodev,nosuid |' /etc/fstab
+- name: /tmp mount options
+  ansible.builtin.shell: sed -r -i 's|(/tmp\s.*defaults)\s|\1,nodev,noexec,nosuid |' /etc/fstab
+- name: /home mount options
+  ansible.builtin.shell: sed -r -i 's|(/home\s.*defaults)\s|\1,nodev,noexec,nosuid |' /etc/fstab
+- name: /var mount options
+  ansible.builtin.shell: sed -r -i 's|(/var\s.*defaults)\s|\1,nodev |' /etc/fstab
+- name: /var/log mount options
+  ansible.builtin.shell: sed -r -i 's|(/var/log\s.*defaults)\s|\1,nodev,noexec,nosuid |' /etc/fstab
+- name: /var/log/audit mount options
+  ansible.builtin.shell: sed -r -i 's|(/var/log/audit\s.*defaults)\s|\1,nodev,noexec,nosuid |' /etc/fstab
+- name: /boot/efi mount options
+  ansible.builtin.shell: sed -r -i 's|(/boot/efi\s.*umask=0077,shortname=winnt\s|1,nosuid |' /etc/fstab
+# 3.3.2. Reconfigure the Volume Group to Accommodate ACAS-specified Partitions
+# 3.3.3. Create the PAM faillock Directory and Set SE Linux Context
+- name: Create PAM faillock directory
+  ansible.builtin.file:
+    path: /var/log/faillock
+    state: directory
+- name: Set SELinux Context
+  community.general.sefcontext:
+    ftype: 'a'
+    target: '/var/log/faillock(/.*)?'
+    setype: faillog_t
+    state: present
+- name: Restore faillock SEContext 
+  ansible.builtin.command: restorecon -R /var/log/faillock
+# 3.3.5. Install Updated Audit Daemon Rules File for STIG Compliance
+- name: Install Updated Audit Daemon Rules
+  ansible.builtin.copy:
+    src: CM-290131_RH8audit.rules
+    dest: /etc/audit/rules.d/audit.rules
+    owner: root
+    group: root
+    mode: '0644'
+  notify:
+    - do_reboot
+# 3.3.6. Configure RHEL 8 system per Site Responsibility STIGs’
+- name: Enable fapolicyd Service
+  ansible.builtin.service:
+    name: fapolicyd.service 
+    enabled: true
+  notify:
+    - Restartfapolicyd
+- name: Enable USBGuard Service 
+  ansible.builtin.service:
+    name: usbguard.service
+    enabled: true
+  notify:
+    - RestartUSBGuard
+- name: Set GRUB Password 
+  ansible.builtin.expect:
+    command: grub2-mkpasswd-pbkdf2
+    responses:
+      Enter password: '{{ grub2_password }}'
+      Reenter password: '{{ grub2_password }}'
+  no_log: true
 - name: Install acas-configure package
   ansible.builtin.dnf:
     name: '{{ acas_configure_url }}'
