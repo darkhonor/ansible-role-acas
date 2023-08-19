@@ -35,6 +35,7 @@
       - openssl-pkcs11
       - usbguard
       - rng-tools
+      - python3-pexpect
     state: present
 # 3.3.1. Reconfigure Mount Points to use STIG Required Mount Options
 - name: /boot mount options
@@ -49,9 +50,83 @@
   ansible.builtin.shell: sed -r -i 's|(/var/log\s.*defaults)\s|\1,nodev,noexec,nosuid |' /etc/fstab
 - name: /var/log/audit mount options
   ansible.builtin.shell: sed -r -i 's|(/var/log/audit\s.*defaults)\s|\1,nodev,noexec,nosuid |' /etc/fstab
-- name: /boot/efi mount options
-  ansible.builtin.shell: sed -r -i 's|(/boot/efi\s.*umask=0077,shortname=winnt\s|1,nosuid |' /etc/fstab
+# This step is failing...need to troubleshoot
+# - name: /boot/efi mount options
+#   ansible.builtin.shell: sed -r -i 's|(/boot/efi\s.*umask=0077,shortname=winnt\s|1,nosuid |' /etc/fstab
 # 3.3.2. Reconfigure the Volume Group to Accommodate ACAS-specified Partitions
+- name: Determine last partition number
+  community.general.parted:
+    device: /dev/sdb
+    state: info
+  register: sda_info
+- name: Create the /dev/sdb1 partition
+  community.general.parted:
+    device: /dev/sdb
+    number: 1
+    label: gpt
+    part_end: "100%"
+    state: present
+- name: Add /dev/sdb1 to the the Logical Volume Group
+  community.general.lvg:
+    vg: sysvg
+    pvs:
+      - /dev/sda3
+      - /dev/sdb1
+    pvresize: true
+    state: present
+- name: Unmount the /opt partition
+  ansible.posix.mount:
+    path: /opt
+    state: unmounted
+- name: Modify Logical Volume for /opt
+  community.general.lvol:
+    vg: 'sysvg'
+    lv: 'lv_opt'
+    size: 500g
+    resizefs: true
+- name: Modify Logical Volume for /opt/sc/www
+  community.general.lvol:
+    vg: 'sysvg'
+    lv: 'lv_tenable_www'
+    size: 5g
+    state: present
+- name: Modify Logical Volume for /opt/nessus/var/nessus/www
+  community.general.lvol:
+    vg: 'sysvg'
+    lv: 'lv_nessus_www'
+    size: 5g
+    state: present
+- name: Format the Tenable.sc www logical Volume
+  community.general.filesystem:
+    fstype: xfs
+    dev: /dev/mapper/sysvg-lv_tenable_www
+    state: present
+- name: Format the Nessus www logical Volume
+  community.general.filesystem:
+    fstype: xfs
+    dev: /dev/mapper/sysvg-lv_nessus_www
+    state: present
+- name: Mount the opt partition
+  ansible.posix.mount:
+    path: /opt
+    src: /dev/mapper/sysvg-lv_opt
+    opts: defaults,nodev,nosuid
+    fstype: xfs
+    state: mounted
+- name: Mount the Tenable.sc www partition
+  ansible.posix.mount:
+    path: /opt/sc/www
+    src: /dev/mapper/sysvg-lv_tenable_www
+    opts: defaults,nodev,nosuid
+    fstype: xfs
+    state: mounted
+- name: Mount the Nessus www partition
+  ansible.posix.mount:
+    path: /opt/nessus/var/nessus/www
+    src: /dev/mapper/sysvg-lv_nessus_www
+    opts: defaults,nodev,nosuid
+    fstype: xfs
+    state: mounted
 # 3.3.3. Create the PAM faillock Directory and Set SE Linux Context
 - name: Create PAM faillock directory
   ansible.builtin.file:
