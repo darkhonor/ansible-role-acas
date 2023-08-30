@@ -6,3 +6,4 @@ acas_configure_shasum: 'F9DD0FB133E3FC19334D6605408FE3B41734E5D8E0CF248679B84FEA
 audit_rules_shasum: 'D086771D89F7F9D52F5C76946E49FEE72A8408C64B121DF13C5CDF39B5828007'
 verify_repository_ssl: false
 grub2_password: 'IN33dT0b3Ch@ng3d!!'
+dod_configuration: true
